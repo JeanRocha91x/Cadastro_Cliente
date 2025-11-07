@@ -21,6 +21,12 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+<!-- HAMBURGUER (sempre no topo) -->
+<div class="hamburger" onclick="toggleSidebar()">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
     <div class="sidebar">
         <div class="logo">Sistema X</div>
         <a href="index.php" class="active"><i class="material-icons">dashboard</i> Dashboard</a>
@@ -112,5 +118,10 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             nomes.forEach(n => new Notification('Lembrete', { body: `${n} vence em 3 dias!`, icon: 'icons/icon-192.png' }));
         };
     </script>
+    <script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+}
+</script>
 </body>
 </html>

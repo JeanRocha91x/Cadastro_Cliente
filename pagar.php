@@ -13,9 +13,8 @@ if (!$cliente) die('Cliente não encontrado.');
 
 function vencimento($data, $plano) {
     $d = new DateTime($data);
-    $plano = strtolower($plano);
     $map = ['mensal'=>'+1 month','trimestral'=>'+3 months','semestral'=>'+6 months','anual'=>'+1 year'];
-    $d->modify($map[$plano] ?? '+1 month');
+    $d->modify($map[strtolower($plano)] ?? '+1 month');
     return $d->format('d/m/Y');
 }
 $venc = vencimento($cliente['data_inicio'], $cliente['plano']);
@@ -27,7 +26,7 @@ $chave = "3d20dd70-8d51-4e4d-8edb-ce1b383a3fae";
 $msg = "Olá {$cliente['nome']}, sua assinatura ($planoUc) está para vencer em $venc.\n\n".
        "Para renovação, siga a nossa chave Pix:\n$chave\n".
        "Valor: R$ $valor\n\n".
-       "Após o pagamento, envie-nos o comprovante para renovação.\nObrigado(s)!";
+       "Após o pagamento, envie-nos o comprovante para renovação.\nObrigado(a)!";
 
 $wa = "https://wa.me/55$tel?text=".urlencode($msg);
 ?>
@@ -39,9 +38,105 @@ $wa = "https://wa.me/55$tel?text=".urlencode($msg);
     <title>Enviar Lembrete – <?=htmlspecialchars($cliente['nome'])?></title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* NEON CARD – FORÇADO NO PAGAR.PHP */
+        .payment-card {
+            background: rgba(15,25,50,.95);
+            padding: 30px;
+            border-radius: 25px;
+            max-width: 420px;
+            width: 100%;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0,255,255,.6), inset 0 0 20px rgba(0,255,255,.1);
+            border: 2px solid #00ffff;
+            font-family: 'Roboto',sans-serif;
+            color: #e0f7ff;
+            position: relative;
+            overflow: hidden;
+        }
+        .payment-card::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, #00ffff, #00d4ff, #0072ff, #00ffff);
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.7;
+        }
+        .payment-title {
+            font-family: 'Orbitron',sans-serif;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            animation: glow 2s infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ffff; }
+            to { text-shadow: 0 0 30px #00ffff, 0 0 50px #00ffff; }
+        }
+        .info { margin:18px 0; line-height:1.8; font-size:1.1rem; }
+        .info strong { color:#00d4ff; text-shadow: 0 0 8px #00d4ff; }
+        .copy-label { margin:15px 0 8px; font-weight:bold; color:#00d4ff; text-shadow: 0 0 8px #00d4ff; }
+        .msg-box {
+            background:#001122; padding:16px; border-radius:15px;
+            font-family:monospace; font-size:.85rem; color:#00ffea;
+            word-break:break-all; border:1px solid #00ffff; margin:15px 0;
+            white-space:pre-line; max-height:180px; overflow-y:auto;
+            box-shadow: 0 0 15px rgba(0,255,255,.3);
+        }
+        .btn {
+            display:block; width:88%; margin:12px auto; padding:14px;
+            border-radius:50px; font-weight:bold; font-size:1.1rem;
+            cursor:pointer; transition:.3s; border:none; text-decoration:none;
+            text-shadow: 0 0 8px rgba(0,0,0,.5);
+        }
+        .btn-copy { 
+            background: linear-gradient(45deg, #00ff88, #00cc66); 
+            color: #000; 
+            box-shadow: 0 0 20px rgba(0,255,136,.5);
+        }
+        .btn-whatsapp { 
+            background: linear-gradient(45deg, #25D366, #128C7E); 
+            color: #fff; 
+            box-shadow: 0 0 20px rgba(37,211,102,.5);
+        }
+        .btn-close { 
+            background: linear-gradient(45deg, #00c6ff, #0072ff); 
+            color: #fff; 
+            box-shadow: 0 0 20px rgba(0,198,255,.5);
+        }
+        .btn:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 30px rgba(0,255,255,.7) !important; 
+        }
+        .success { 
+            background: rgba(0,255,136,.2); 
+            color: #00ff88; 
+            padding: 10px; 
+            border-radius: 12px; 
+            margin: 10px auto; 
+            width: 88%; 
+            font-weight: bold;
+            border: 1px solid #00ff88;
+            box-shadow: 0 0 15px rgba(0,255,136,.4);
+        }
+
+        /* RESPONSIVO */
+        @media (max-width: 768px) {
+            .payment-card { max-width:95%; padding:22px; margin:15px; }
+            .msg-box { font-size:.8rem; max-height:160px; }
+            .btn { width:92%; font-size:1rem; }
+        }
+    </style>
 </head>
 <body>
+
+<!-- HAMBURGUER -->
+<div class="hamburger" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+</div>
 
 <div class="sidebar">
     <div class="logo">Sistema X</div>
@@ -54,8 +149,8 @@ $wa = "https://wa.me/55$tel?text=".urlencode($msg);
 
 <div class="main">
     <header>
-        <h1>Enviar Lembrete</h1>
-        <a href="index.php" class="btn-back">Voltar</a>
+        <!--<h1>Enviar Lembrete</h1>
+         <-- <a href="index.php" class="btn-back">Voltar</a> */ -->
     </header>
 
     <div class="payment-card">
@@ -87,6 +182,9 @@ function copyMsg(){
         el.style.display='block';
         setTimeout(()=>el.style.display='none',2000);
     });
+}
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
 }
 </script>
 </body>

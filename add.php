@@ -76,5 +76,10 @@ if ($_POST) {
             <button type="submit" class="btn">Salvar Cliente</button>
         </form>
     </div>
+    <script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+}
+</script>
 </body>
 </html>

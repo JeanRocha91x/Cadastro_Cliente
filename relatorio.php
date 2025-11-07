@@ -32,6 +32,12 @@ $total_mes = $total->fetchColumn() ?: 0;
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
+    <!-- HAMBURGUER (sempre no topo) -->
+<div class="hamburger" onclick="toggleSidebar()">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
 
 <div class="sidebar">
     <div class="logo">Sistema X</div>
