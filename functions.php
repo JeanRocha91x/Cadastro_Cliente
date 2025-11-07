@@ -1,38 +1,32 @@
 <?php
-function mesesDoPlano(string $plano): int {
-    return match($plano) {
-        'mensal'      => 1,
-        'trimestral'  => 3,
-        'semestral'   => 6,
-        'anual'       => 12,
-        default       => 0,
-    };
+function mesesDoPlano($plano) {
+    switch ($plano) {
+        case 'mensal': return 1;
+        case 'trimestral': return 3;
+        case 'semestral': return 6;
+        case 'anual': return 12;
+        default: return 0;
+    }
 }
 
-function vencimento(string $dataInicio, string $plano): string {
+function vencimento($dataInicio, $plano) {
     $meses = mesesDoPlano($plano);
     return date('Y-m-d', strtotime("$dataInicio + $meses months"));
 }
 
-function statusCliente(string $dataInicio, string $plano): array {
+function statusCliente($dataInicio, $plano) {
     $vcto = vencimento($dataInicio, $plano);
     $hoje = date('Y-m-d');
     $dias = (strtotime($vcto) - strtotime($hoje)) / 86400;
 
-    if ($vcto < $hoje) {
-        $status = 'Vencido';
-        $classe = 'vencido';
-    } elseif ($vcto == $hoje) {
-        $status = 'Vence hoje';
-        $classe = 'hoje';
-    } elseif ($dias <= 7) {
-        $status = "Vence em breve ($dias dias)";
-        $classe = 'alerta';
-    } else {
-        $status = 'Ativo';
-        $classe = 'ativo';
-    }
+    if ($vcto < $hoje) return ['status' => 'Vencido', 'classe' => 'vencido'];
+    elseif ($vcto == $hoje) return ['status' => 'Vence hoje', 'classe' => 'hoje'];
+    elseif ($dias <= 7) return ['status' => "Vence em " . round($dias) . " dias", 'classe' => 'alerta'];
+    else return ['status' => 'Ativo', 'classe' => 'ativo'];
+}
 
-    return ['status' => $status, 'classe' => $classe, 'vencimento' => $vcto, 'dias' => $dias];
+function getNotifications($pdo) {
+    $sql = "SELECT nome FROM clientes WHERE DATE_ADD(data_inicio, INTERVAL CASE plano WHEN 'mensal' THEN 1 WHEN 'trimestral' THEN 3 WHEN 'semestral' THEN 6 WHEN 'anual' THEN 12 END MONTH) = DATE_ADD(CURDATE(), INTERVAL 3 DAY)";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN);
 }
 ?>
