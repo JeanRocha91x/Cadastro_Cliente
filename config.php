@@ -2,10 +2,10 @@
 session_start();
 
 // Configurações do Banco de Dados (SUBSTITUA PELAS SUAS!)
-$host = 'sql110.infinityfree.com';     // Ex: sql123456.epizy.com
-$dbname = 'if0_40344657_system'; // Nome do seu banco
-$username = 'if0_40344657';      // Usuário do DB
-$password = 'a1YGck2NUsQblCX';   // Senha do DB
+$host = 'XXXXXXXXXXX';     // Ex: sql123456.epizy.com
+$dbname = 'XXXXXXXXXXX'; // Nome do seu banco
+$username = 'iXXXXXXXXXXX';      // Usuário do DB
+$password = 'XXXXXXXXXXX';   // Senha do DB
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
