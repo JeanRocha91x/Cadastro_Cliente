@@ -3,7 +3,6 @@ session_start();
 require_once 'config.php';
 require_once 'functions.php';
 requireLogin();
-
 $id = intval($_GET['id'] ?? 0);
 $stmt = $pdo->prepare("SELECT nome FROM clientes WHERE id = ?");
 $stmt->execute([$id]);
@@ -12,7 +11,6 @@ if (!$cliente) {
     header('Location: index.php');
     exit;
 }
-
 // Registrar pagamento
 if ($_POST) {
     $data = $_POST['data_pagamento'];
@@ -22,7 +20,6 @@ if ($_POST) {
     $stmt->execute([$id, $data, $valor, $obs]);
     $msg = "Pagamento registrado!";
 }
-
 // Listar histórico
 $stmt = $pdo->prepare("SELECT * FROM historico_pagamentos WHERE cliente_id = ? ORDER BY data_pagamento DESC");
 $stmt->execute([$id]);
@@ -36,6 +33,7 @@ $historico = $stmt->fetchAll();
     <title>Histórico - <?= htmlspecialchars($cliente) ?></title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <div class="sidebar">
@@ -46,17 +44,14 @@ $historico = $stmt->fetchAll();
         <a href="export.php"><i class="material-icons">download</i> Exportar</a>
         <a href="logout.php"><i class="material-icons">logout</i> Sair</a>
     </div>
-
     <div class="main">
         <header>
             <h1>Histórico de <?= htmlspecialchars($cliente) ?></h1>
             <a href="index.php" class="btn-back">Voltar</a>
         </header>
-
         <?php if (isset($msg)): ?>
             <div class="success-box"><?= $msg ?></div>
         <?php endif; ?>
-
         <form method="POST" class="payment-form">
             <div class="form-grid">
                 <div class="form-group">
@@ -74,7 +69,6 @@ $historico = $stmt->fetchAll();
             </div>
             <button type="submit" class="btn">Registrar</button>
         </form>
-
         <div class="table-container">
             <table>
                 <thead>
@@ -82,7 +76,7 @@ $historico = $stmt->fetchAll();
                         <th>Data</th>
                         <th>Valor</th>
                         <th>Obs</th>
-                        <th>QR</th>
+                        <th>WA</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -91,9 +85,9 @@ $historico = $stmt->fetchAll();
                         <td><?= date('d/m/Y', strtotime($p['data_pagamento'])) ?></td>
                         <td>R$ <?= number_format($p['valor_pago'], 2, ',', '.') ?></td>
                         <td><?= htmlspecialchars($p['observacoes']) ?></td>
-                        <td class="qr-cell">
+                        <td class="wa-cell">
                             <a href="pagar.php?id=<?= $id ?>&valor=<?= $p['valor_pago'] ?>" class="btn-icon">
-                                <i class="material-icons">qr_code</i>
+                                <i class="fa-brands fa-square-whatsapp"></i>
                             </a>
                         </td>
                     </tr>

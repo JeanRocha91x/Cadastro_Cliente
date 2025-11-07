@@ -18,6 +18,7 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <div class="sidebar">
@@ -75,7 +76,7 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <th>Plano</th>
                         <th>Vencimento</th>
                         <th>Status</th>
-                        <th>QR</th>
+                        <th>WA</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -87,7 +88,11 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <td><?= ucfirst($c['plano']) ?></td>
                         <td><?= date('d/m/Y', strtotime(vencimento($c['data_inicio'], $c['plano']))) ?></td>
                         <td><span class="status <?= $info['classe'] ?>"><?= $info['status'] ?></span></td>
-                        <td><a href="pagar.php?id=<?= $c['id'] ?>" class="btn-icon"><i class="material-icons">qr_code</i></a></td>
+                        <td class="wa-cell">
+                            <a href="pagar.php?id=<?= $c['id'] ?>" class="btn-icon">
+                                <i class="fa-brands fa-square-whatsapp"></i>
+                            </a>
+                        </td>
                         <td class="actions">
                             <a href="edit.php?id=<?= $c['id'] ?>" class="btn-icon"><i class="material-icons">edit</i></a>
                             <a href="delete.php?id=<?= $c['id'] ?>" class="btn-icon danger" onclick="return confirm('Excluir?')"><i class="material-icons">delete</i></a>

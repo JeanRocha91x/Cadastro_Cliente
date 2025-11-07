@@ -3,13 +3,11 @@ session_start();
 require_once 'config.php';
 require_once 'functions.php';
 requireLogin();
-
 $mes = $_GET['mes'] ?? date('Y-m');
 $inicio = "$mes-01";
 $fim = date('Y-m-t', strtotime($inicio));
-
 $stmt = $pdo->prepare("
-    SELECT c.nome, c.valor AS valor_plano, h.*
+    SELECT c.nome, c.plano, h.*
     FROM historico_pagamentos h
     JOIN clientes c ON h.cliente_id = c.id
     WHERE h.data_pagamento BETWEEN ? AND ?
@@ -17,10 +15,9 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$inicio, $fim]);
 $pagamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 $total = $pdo->prepare("SELECT SUM(valor_pago) as total FROM historico_pagamentos WHERE data_pagamento BETWEEN ? AND ?");
 $total->execute([$inicio, $fim]);
-$total_mes = $total->fetchColumn();
+$total_mes = $total->fetchColumn() ?: 0;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -40,16 +37,16 @@ $total_mes = $total->fetchColumn();
         <a href="export.php"><i class="material-icons">download</i> Exportar</a>
         <a href="logout.php"><i class="material-icons">logout</i> Sair</a>
     </div>
-
     <div class="main">
         <header>
             <h1>Relatório Mensal</h1>
-            <form class="search-form" style="gap:10px;">
+            <form class="search-form" style="gap:10px; align-items:center;">
                 <input type="month" name="mes" value="<?= $mes ?>" onchange="this.form.submit()">
                 <a href="index.php" class="btn-back">Voltar</a>
             </form>
         </header>
 
+        <!-- TOTAL COM NEON -->
         <div class="total-box">
             Total Recebido: R$ <?= number_format($total_mes, 2, ',', '.') ?>
         </div>
