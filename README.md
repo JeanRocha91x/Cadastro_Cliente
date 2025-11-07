@@ -88,11 +88,6 @@ CREATE TABLE historico_pagamentos (
     observacoes TEXT,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
 );
-
--- Dados de Teste (opcional)
-INSERT INTO clientes (nome, email, telefone, plano, valor, data_inicio) VALUES
-('Jean Rocha', 'jean@example.com', '(11) 99999-9999', 'mensal', 99.90, '2025-11-01'),
-('Teste', 'teste@example.com', '(11) 88888-8888', 'trimestral', 299.70, '2025-10-01');
 ```
 
 4. Clique **"Executar"**
