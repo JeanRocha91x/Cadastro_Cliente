@@ -2,7 +2,6 @@
 require_once 'config.php';
 require_once 'functions.php';
 requireLogin();
-
 if ($_POST) {
     $nome = $_POST['nome'];
     $email = $_POST['email'];
@@ -26,6 +25,11 @@ if ($_POST) {
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
+    <!-- HAMBURGUER MOBILE -->
+    <div class="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+    </div>
+
     <div class="sidebar">
         <div class="logo">Sistema X</div>
         <a href="index.php"><i class="material-icons">dashboard</i> Dashboard</a>
@@ -34,13 +38,11 @@ if ($_POST) {
         <a href="export.php"><i class="material-icons">download</i> Exportar</a>
         <a href="logout.php"><i class="material-icons">logout</i> Sair</a>
     </div>
-
     <div class="main">
         <header>
             <h1>Novo Cliente</h1>
             <a href="index.php" class="btn-back">Voltar</a>
         </header>
-
         <form method="POST" class="payment-form">
             <div class="form-grid">
                 <div class="form-group">
@@ -76,6 +78,11 @@ if ($_POST) {
             <button type="submit" class="btn">Salvar Cliente</button>
         </form>
     </div>
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+    </script>
     <script>
 function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');

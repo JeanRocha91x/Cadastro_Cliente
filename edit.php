@@ -2,7 +2,6 @@
 require_once 'config.php';
 require_once 'functions.php';
 requireLogin();
-
 $id = intval($_GET['id'] ?? 0);
 $stmt = $pdo->prepare("SELECT * FROM clientes WHERE id = ?");
 $stmt->execute([$id]);
@@ -11,7 +10,6 @@ if (!$cliente) {
     header('Location: index.php');
     exit;
 }
-
 if ($_POST) {
     $nome = $_POST['nome'];
     $email = $_POST['email'];
@@ -30,11 +28,16 @@ if ($_POST) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar: <?= htmlspecialchars($cliente['nome']) ?></title>
+    <title>Editar Cliente: <?= htmlspecialchars($cliente['nome']) ?></title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
+    <!-- HAMBURGUER MOBILE -->
+    <div class="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+    </div>
+
     <div class="sidebar">
         <div class="logo">Sistema X</div>
         <a href="index.php"><i class="material-icons">dashboard</i> Dashboard</a>
@@ -43,17 +46,11 @@ if ($_POST) {
         <a href="export.php"><i class="material-icons">download</i> Exportar</a>
         <a href="logout.php"><i class="material-icons">logout</i> Sair</a>
     </div>
-
     <div class="main">
         <header>
-            <h1>Editar: <?= htmlspecialchars($cliente['nome']) ?></h1>
+            <h1>Editar Cliente: <?= htmlspecialchars($cliente['nome']) ?></h1>
             <a href="index.php" class="btn-back">Voltar</a>
         </header>
-
-        <?php if (isset($_GET['msg'])): ?>
-            <div class="success-box">Cliente atualizado com sucesso!</div>
-        <?php endif; ?>
-
         <form method="POST" class="payment-form">
             <div class="form-grid">
                 <div class="form-group">
@@ -89,5 +86,15 @@ if ($_POST) {
             <button type="submit" class="btn">Atualizar Cliente</button>
         </form>
     </div>
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+    </script>
+    <script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+}
+</script>
 </body>
 </html>

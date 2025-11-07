@@ -187,5 +187,10 @@ function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
 }
 </script>
+    <script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+}
+</script>
 </body>
 </html>

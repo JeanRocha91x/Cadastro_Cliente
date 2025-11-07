@@ -57,9 +57,11 @@ $total_mes = $total->fetchColumn() ?: 0;
         </form>
     </header>
 
-    <div class="total-box">
-        Total Recebido: R$ <?=number_format($total_mes,2,',','.')?>
-    </div>
+    <!-- TOTAL RECEBIDO COM NEON RESTAURADO -->
+<div class="total-box">
+    <div class="neon-label">Total Recebido</div>
+    <div class="neon-value">R$ <?= number_format($total_mes, 2, ',', '.') ?></div>
+</div>
 
     <div class="table-container">
         <table>
@@ -83,5 +85,10 @@ $total_mes = $total->fetchColumn() ?: 0;
         </table>
     </div>
 </div>
+    <script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+}
+</script>
 </body>
 </html>

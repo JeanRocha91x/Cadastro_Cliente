@@ -124,7 +124,7 @@ tr:hover { background:#24243e; }
     }
 }
 
-/* HAMBURGUER – POSIÇÃO CORRETA, SEM SOBREPOR */
+/* HAMBURGUER – MOBILE */
 .hamburger {
     position: fixed;
     top: 15px;
@@ -147,42 +147,94 @@ tr:hover { background:#24243e; }
     border-radius: 3px;
     transition: 0.3s;
 }
+
+/* MOSTRAR NO MOBILE */
 @media (max-width: 768px) {
     .hamburger { display: flex; }
-    /* Ajusta o título e logo para não serem cobertos */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        width: 250px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+    .sidebar.open {
+        left: 0;
+    }
+    .main {
+        margin-left: 0 !important;
+        padding-top: 70px;
+        width: 100%;
+    }
     header h1, .sidebar .logo {
         margin-left: 60px !important;
-        padding-left: 10px;
     }
-    .main { padding-top: 70px !important; }
 }
 
-/* ANIMAÇÃO FECHAR (X) */
-.sidebar.open ~ .main .hamburger span:nth-child(1) { transform: rotate(-45deg) translate(-6px, 6px); }
-.sidebar.open ~ .main .hamburger span:nth-child(2) { opacity: 0; }
-.sidebar.open ~ .main .hamburger span:nth-child(3) { transform: rotate(45deg) translate(-6px, -6px); }
-
-/* TOTAL RECEBIDO – NEON VERDE RESTAURADO */
+/* ANIMAÇÃO X (FECHAR) */
+.sidebar.open ~ .main .hamburger span:nth-child(1) { 
+    transform: rotate(-45deg) translate(-6px, 6px); 
+}
+.sidebar.open ~ .main .hamburger span:nth-child(2) { 
+    opacity: 0; 
+}
+.sidebar.open ~ .main .hamburger span:nth-child(3) { 
+    transform: rotate(45deg) translate(-6px, -6px); 
+}
+/* TOTAL RECEBIDO – NEON VERDE (PADRÃO DO SISTEMA) */
 .total-box {
-    background: linear-gradient(45deg, #00ff88, #00cc66);
-    color: #000;
-    padding: 18px 25px;
-    border-radius: 50px;
-    font-weight: bold;
-    font-size: 1.3rem;
-    text-align: center;
-    margin: 25px auto;
-    box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
-    display: inline-block;
-    min-width: 280px;
+    background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,204,102,0.1));
     border: 2px solid #00ff88;
-    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    border-radius: 25px;
+    padding: 5px 10px;
+    margin: 15px auto;
+    max-width: 350px;
+    text-align: center;
+    box-shadow: 
+        0 0 20px rgba(0,255,136,0.6),
+        0 0 40px rgba(0,255,136,0.3),
+        inset 0 0 20px rgba(0,255,136,0.1);
+    font-family: 'Orbitron', sans-serif;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
 }
+.total-box::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(45deg, #00ff88, #00cc66, #00ff88);
+    z-index: -1;
+    filter: blur(10px);
+    opacity: 0.7;
+}
+.neon-label {
+    color: #00ff88;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00ff88;
+    margin-bottom: 8px;
+}
+.neon-value {
+    color: #ffffff;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-shadow: 
+        0 0 15px #00ff88,
+        0 0 30px #00ff88,
+        0 0 50px #00ff88;
+    letter-spacing: 1px;
+}
+
+/* RESPONSIVO */
 @media (max-width: 768px) {
     .total-box {
-        font-size: 1.1rem;
-        min-width: auto;
-        width: 90%;
-        padding: 16px;
+        max-width: 90%;
+        padding: 18px 20px;
+        margin: 20px auto;
     }
+    .neon-value { font-size: 1.5rem; }
 }

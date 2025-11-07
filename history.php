@@ -99,5 +99,10 @@ $historico = $stmt->fetchAll();
             </table>
         </div>
     </div>
+    <script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+}
+</script>
 </body>
 </html>

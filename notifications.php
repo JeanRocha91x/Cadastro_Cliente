@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'config.php';
 requireLogin();
 header('Content-Type: text/event-stream');
