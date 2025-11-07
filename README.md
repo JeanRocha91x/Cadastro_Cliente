@@ -30,20 +30,20 @@ Teste o sistema ao vivo:
 
 ### Screenshots
 
-#### Dashboard Desktop
-![Dashboard Desktop](https://raw.githubusercontent.com/JeanRocha91x/Cadastro_Cliente/main/screenshots/dashboard-desktop.png)
+#### Tela de Login
+<img width="1485" height="869" alt="Image" src="https://github.com/user-attachments/assets/5e4a55ae-12c6-46ac-b299-bf5a75dbc679" />
 
-#### Dashboard Mobile
-![Dashboard Mobile](https://raw.githubusercontent.com/JeanRocha91x/Cadastro_Cliente/main/screenshots/dashboard-mobile.png)
+#### Dashboard Desktop
+<img width="1488" height="864" alt="Image" src="https://github.com/user-attachments/assets/1077fcc6-5bb0-437e-9bfd-4940b9be858b" />
 
 #### Formulário Novo Cliente
-![Novo Cliente](https://raw.githubusercontent.com/JeanRocha91x/Cadastro_Cliente/main/screenshots/novo-cliente.png)
+<img width="1486" height="867" alt="Image" src="https://github.com/user-attachments/assets/d376dba3-44de-4a80-a593-1019753563de" />
 
 #### Relatório Mensal
-![Relatório](https://raw.githubusercontent.com/JeanRocha91x/Cadastro_Cliente/main/screenshots/relatorio.png)
+<img width="1482" height="869" alt="Image" src="https://github.com/user-attachments/assets/f3b1a2ab-dbf7-40fe-aa02-b09226b1d44e" />
 
 #### Lembrete WhatsApp
-![WhatsApp](https://raw.githubusercontent.com/JeanRocha91x/Cadastro_Cliente/main/screenshots/whatsapp.png)
+<img width="1480" height="867" alt="Image" src="https://github.com/user-attachments/assets/5655db54-f936-4c6f-9cbf-8f5448aaea46" />
 
 ---
 
@@ -280,7 +280,7 @@ MIT License - veja [LICENSE](LICENSE)
 ---
 
 <div align="center">
-    <img src="https://raw.githubusercontent.com/JeanRocha91x/Cadastro_Cliente/main/screenshots/dashboard-mobile.png" width="100%">
+    <img width="397" height="709" alt="Image" src="https://github.com/user-attachments/assets/f6852619-5351-4e58-aaac-863b4abfa301" />
     <p><strong>Sistema 100% Responsivo – Mobile e Desktop</strong></p>
 </div>
 
