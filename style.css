@@ -238,3 +238,26 @@ tr:hover { background:#24243e; }
     }
     .neon-value { font-size: 1.5rem; }
 }
+/* --- CUSTOMIZAÇÕES ADICIONADAS --- */
+
+/* Cards clicáveis */
+.stat-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+/* Card "Clientes a Vencer" */
+.stat-card.avencer i {
+    color: #ffcc00;
+}
+.stat-card.avencer {
+    padding-left: 17px;
+}
+
+/* Ícone do WhatsApp menor no mobile */
+@media (max-width: 768px) {
+    .wa-cell .btn-icon {
+        font-size: 1.1rem !important;
+    }
+}

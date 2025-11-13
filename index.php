@@ -8,6 +8,39 @@ $where = $search ? "WHERE nome LIKE :search OR telefone LIKE :search" : "";
 $stmt = $pdo->prepare("SELECT * FROM clientes $where ORDER BY data_inicio DESC");
 $stmt->execute($search ? [':search' => "%$search%"] : []);
 $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// --- Filtro pelos cards: ativos | avencer | vencidos | todos ---
+$f = $_GET['f'] ?? 'todos';
+$f = preg_replace('/[^a-z]/', '', strtolower($f));
+
+// Contadores e filtragem baseados no próximo vencimento
+$counts = ['ativos' => 0, 'avencer' => 0, 'vencidos' => 0, 'total' => count($clientes)];
+$today = strtotime(date('Y-m-d'));
+
+$clientes_filtrados = [];
+foreach ($clientes as $cli) {
+    $venc = strtotime(vencimento($cli['data_inicio'], $cli['plano']));
+    $dias = (int) floor(($venc - $today) / 86400);
+
+    if ($dias < 0) {
+        $bucket = 'vencidos';
+    } elseif ($dias <= 3) {
+        $bucket = 'avencer';
+    } else {
+        $bucket = 'ativos';
+    }
+    $counts[$bucket]++;
+
+    // Aplica o filtro atual
+    if ($f === 'todos' || $f === $bucket) {
+        $clientes_filtrados[] = $cli;
+    }
+}
+
+// Se for "todos", mantém a lista original
+if ($f === 'todos') {
+    $clientes_filtrados = $clientes;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -27,23 +60,28 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <span></span>
     <span></span>
 </div>
-    <div class="sidebar">
-        <div class="logo">Sistema X</div>
-        <a href="index.php" class="active"><i class="material-icons">dashboard</i> Dashboard</a>
-        <a href="add.php"><i class="material-icons">person_add</i> Novo Cliente</a>
-        <a href="relatorio.php"><i class="material-icons">bar_chart</i> Relatório Mensal</a>
-        <a href="export.php"><i class="material-icons">download</i> Exportar</a>
-        <a href="logout.php"><i class="material-icons">logout</i> Sair</a>
-    </div>
-    <div class="main">
-        <header>
-            <h1>Dashboard</h1>
-            <form class="search-form">
-                <input type="text" name="q" placeholder="Pesquisar por nome ou telefone..." value="<?= htmlspecialchars($search) ?>">
-                <button type="submit"><i class="material-icons">search</i></button>
-            </form>
-        </header>
-        <div class="stats-grid">
+
+<div class="sidebar">
+    <div class="logo">Sistema X</div>
+    <a href="index.php" class="active"><i class="material-icons">dashboard</i> Dashboard</a>
+    <a href="add.php"><i class="material-icons">person_add</i> Novo Cliente</a>
+    <a href="relatorio.php"><i class="material-icons">bar_chart</i> Relatório Mensal</a>
+    <a href="export.php"><i class="material-icons">download</i> Exportar</a>
+    <a href="logout.php"><i class="material-icons">logout</i> Sair</a>
+</div>
+
+<div class="main">
+    <header>
+        <h1>Dashboard</h1>
+        <form class="search-form">
+            <input type="text" name="q" placeholder="Pesquisar por nome ou telefone..." value="<?= htmlspecialchars($search) ?>">
+            <button type="submit"><i class="material-icons">search</i></button>
+        </form>
+    </header>
+
+    <!-- CARDS -->
+    <div class="stats-grid">
+        <a class="stat-card-link" href="index.php?f=todos">
             <div class="stat-card total">
                 <i class="material-icons">people</i>
                 <div>
@@ -51,6 +89,9 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Total de Clientes</p>
                 </div>
             </div>
+        </a>
+
+        <a class="stat-card-link" href="index.php?f=ativos">
             <div class="stat-card ativo">
                 <i class="material-icons">check_circle</i>
                 <div>
@@ -58,6 +99,19 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Clientes Ativos</p>
                 </div>
             </div>
+        </a>
+
+        <a class="stat-card-link" href="index.php?f=avencer">
+            <div class="stat-card avencer">
+                <i class="material-icons">schedule</i>
+                <div>
+                    <h3><?= $counts['avencer'] ?></h3>
+                    <p>Clientes a Vencer</p>
+                </div>
+            </div>
+        </a>
+
+        <a class="stat-card-link" href="index.php?f=vencidos">
             <div class="stat-card vencido">
                 <i class="material-icons">error</i>
                 <div>
@@ -65,60 +119,64 @@ $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Clientes Vencidos</p>
                 </div>
             </div>
-            <div class="stat-card planos">
-                <i class="material-icons">pie_chart</i>
-                <div>
-                    <h3><?= count($stats['planos']) ?></h3>
-                    <p>Tipos de Planos</p>
-                </div>
+        </a>
+
+        <div class="stat-card planos">
+            <i class="material-icons">pie_chart</i>
+            <div>
+                <h3><?= count($stats['planos']) ?></h3>
+                <p>Tipos de Planos</p>
             </div>
         </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Telefone</th>
-                        <th>Plano</th>
-                        <th>Vencimento</th>
-                        <th>Status</th>
-                        <th>WA</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($clientes as $c): $info = statusCliente($c['data_inicio'], $c['plano']); ?>
-                    <tr class="<?= $info['classe'] ?>">
-                        <td><?= htmlspecialchars($c['nome']) ?></td>
-                        <td><?= htmlspecialchars($c['telefone'] ?? '—') ?></td>
-                        <td><?= ucfirst($c['plano']) ?></td>
-                        <td><?= date('d/m/Y', strtotime(vencimento($c['data_inicio'], $c['plano']))) ?></td>
-                        <td><span class="status <?= $info['classe'] ?>"><?= $info['status'] ?></span></td>
-                        <td class="wa-cell">
-                            <a href="pagar.php?id=<?= $c['id'] ?>" class="btn-icon">
-                                <i class="fa-brands fa-square-whatsapp"></i>
-                            </a>
-                        </td>
-                        <td class="actions">
-                            <a href="edit.php?id=<?= $c['id'] ?>" class="btn-icon"><i class="material-icons">edit</i></a>
-                            <a href="delete.php?id=<?= $c['id'] ?>" class="btn-icon danger" onclick="return confirm('Excluir?')"><i class="material-icons">delete</i></a>
-                            <a href="history.php?id=<?= $c['id'] ?>" class="btn-icon"><i class="material-icons">history</i></a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
     </div>
-    <script>
-        if (Notification.permission === 'default') Notification.requestPermission();
-        const es = new EventSource('notifications.php');
-        es.onmessage = e => {
-            const nomes = JSON.parse(e.data);
-            nomes.forEach(n => new Notification('Lembrete', { body: `${n} vence em 3 dias!`, icon: 'icons/icon-192.png' }));
-        };
-    </script>
-    <script>
+
+    <!-- TABELA -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Plano</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th>WA</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($clientes_filtrados as $c): $info = statusCliente($c['data_inicio'], $c['plano']); ?>
+                <tr class="<?= $info['classe'] ?>">
+                    <td><?= htmlspecialchars($c['nome']) ?></td>
+                    <td><?= htmlspecialchars($c['telefone'] ?? '—') ?></td>
+                    <td><?= ucfirst($c['plano']) ?></td>
+                    <td><?= date('d/m/Y', strtotime(vencimento($c['data_inicio'], $c['plano']))) ?></td>
+                    <td><span class="status <?= $info['classe'] ?>"><?= $info['status'] ?></span></td>
+                    <td class="wa-cell">
+                        <a href="pagar.php?id=<?= $c['id'] ?>" class="btn-icon">
+                            <i class="fa-brands fa-square-whatsapp"></i>
+                        </a>
+                    </td>
+                    <td class="actions">
+                        <a href="edit.php?id=<?= $c['id'] ?>" class="btn-icon"><i class="material-icons">edit</i></a>
+                        <a href="delete.php?id=<?= $c['id'] ?>" class="btn-icon danger" onclick="return confirm('Excluir?')"><i class="material-icons">delete</i></a>
+                        <a href="history.php?id=<?= $c['id'] ?>" class="btn-icon"><i class="material-icons">history</i></a>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+if (Notification.permission === 'default') Notification.requestPermission();
+const es = new EventSource('notifications.php');
+es.onmessage = e => {
+    const nomes = JSON.parse(e.data);
+    nomes.forEach(n => new Notification('Lembrete', { body: `${n} vence em 3 dias!`, icon: 'icons/icon-192.png' }));
+};
+
 function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
 }
