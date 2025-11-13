@@ -1,21 +1,88 @@
 <?php
 require_once 'config.php';
 require_once 'functions.php';
+
+// --- Cabeçalhos de segurança básicos (se o host reclamar, pode remover a linha do CSP) ---
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: same-origin');
+// Se a InfinityFree implicar com CSP, comente a linha abaixo.
+header("Content-Security-Policy: default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; script-src 'self' https://cdnjs.cloudflare.com");
+
 requireLogin();
-$stats = getStats($pdo);
+
+// --- Helper para WhatsApp: aceita BR/PT automaticamente e permite forçar via ?ddi=55/351 ---
+if (!function_exists('wa_phone')) {
+    function wa_phone($raw, $force_ddi = null) {
+        $n = preg_replace('/\D+/', '', (string)$raw);
+        if ($n === '') return $n;
+
+        // Se já vier com DDI BR/PT, mantém
+        if (preg_match('/^(55|351)/', $n)) {
+            return $n;
+        }
+
+        // Se vier ?ddi=55 ou ?ddi=351, aplica
+        if ($force_ddi === '55' || $force_ddi === '351') {
+            return $force_ddi . $n;
+        }
+
+        // Auto-detecção:
+        // - 11+ dígitos -> BR (55)
+        // - 9 dígitos   -> PT (351)
+        // - fallback    -> BR (55)
+        $len = strlen($n);
+        if ($len >= 11) return '55' . $n;
+        if ($len == 9)  return '351' . $n;
+        return '55' . $n;
+    }
+}
+
+$force_ddi = null;
+if (isset($_GET['ddi']) && preg_match('/^(55|351)$/', $_GET['ddi'])) {
+    $force_ddi = $_GET['ddi'];
+}
+
+// --- Stats gerais ---
+$stats  = getStats($pdo);
+
+// --- Busca ---
 $search = $_GET['q'] ?? '';
-$where = $search ? "WHERE nome LIKE :search OR telefone LIKE :search" : "";
-$stmt = $pdo->prepare("SELECT * FROM clientes $where ORDER BY data_inicio DESC");
-$stmt->execute($search ? [':search' => "%$search%"] : []);
+$where  = $search ? "WHERE nome LIKE :search OR telefone LIKE :search" : "";
+
+// --- Paginação ---
+$per  = max(5, min(100, (int)($_GET['per'] ?? 20)));
+$page = max(1, (int)($_GET['page'] ?? 1));
+$off  = ($page - 1) * $per;
+
+// Conta total de registros pra paginar
+$sqlCount = "SELECT COUNT(*) FROM clientes $where";
+$stmtCount = $pdo->prepare($sqlCount);
+if ($search) {
+    $stmtCount->bindValue(':search', "%$search%", PDO::PARAM_STR);
+}
+$stmtCount->execute();
+$total_rows  = (int) $stmtCount->fetchColumn();
+$total_pages = max(1, (int) ceil($total_rows / $per));
+
+// Busca os clientes da página atual
+$sqlList = "SELECT * FROM clientes $where ORDER BY data_inicio DESC LIMIT :off, :per";
+$stmt = $pdo->prepare($sqlList);
+if ($search) {
+    $stmt->bindValue(':search', "%$search%", PDO::PARAM_STR);
+}
+$stmt->bindValue(':off', $off, PDO::PARAM_INT);
+$stmt->bindValue(':per', $per, PDO::PARAM_INT);
+$stmt->execute();
 $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // --- Filtro pelos cards: ativos | avencer | vencidos | todos ---
 $f = $_GET['f'] ?? 'todos';
 $f = preg_replace('/[^a-z]/', '', strtolower($f));
 
-// Contadores e filtragem baseados no próximo vencimento
+// Contadores e filtragem baseados no próximo vencimento (na página atual)
 $counts = ['ativos' => 0, 'avencer' => 0, 'vencidos' => 0, 'total' => count($clientes)];
-$today = strtotime(date('Y-m-d'));
+$today  = strtotime(date('Y-m-d'));
 
 $clientes_filtrados = [];
 foreach ($clientes as $cli) {
@@ -29,15 +96,15 @@ foreach ($clientes as $cli) {
     } else {
         $bucket = 'ativos';
     }
+
     $counts[$bucket]++;
 
-    // Aplica o filtro atual
     if ($f === 'todos' || $f === $bucket) {
         $clientes_filtrados[] = $cli;
     }
 }
 
-// Se for "todos", mantém a lista original
+// Se for "todos", mantém a lista original da página
 if ($f === 'todos') {
     $clientes_filtrados = $clientes;
 }
@@ -67,13 +134,19 @@ if ($f === 'todos') {
     <a href="add.php"><i class="material-icons">person_add</i> Novo Cliente</a>
     <a href="relatorio.php"><i class="material-icons">bar_chart</i> Relatório Mensal</a>
     <a href="export.php"><i class="material-icons">download</i> Exportar</a>
+    <a href="backup.php"><i class="material-icons">archive</i> Backup</a>
     <a href="logout.php"><i class="material-icons">logout</i> Sair</a>
 </div>
 
 <div class="main">
     <header>
         <h1>Dashboard</h1>
-        <form class="search-form">
+        <form class="search-form" method="get" action="index.php">
+            <input type="hidden" name="f"   value="<?= htmlspecialchars($f) ?>">
+            <input type="hidden" name="per" value="<?= (int)$per ?>">
+            <?php if ($force_ddi): ?>
+                <input type="hidden" name="ddi" value="<?= htmlspecialchars($force_ddi) ?>">
+            <?php endif; ?>
             <input type="text" name="q" placeholder="Pesquisar por nome ou telefone..." value="<?= htmlspecialchars($search) ?>">
             <button type="submit"><i class="material-icons">search</i></button>
         </form>
@@ -81,7 +154,7 @@ if ($f === 'todos') {
 
     <!-- CARDS -->
     <div class="stats-grid">
-        <a class="stat-card-link" href="index.php?f=todos">
+        <a class="stat-card-link" href="index.php?f=todos&q=<?= urlencode($search) ?>&page=1&per=<?= (int)$per ?><?= $force_ddi ? '&ddi='.$force_ddi : '' ?>">
             <div class="stat-card total">
                 <i class="material-icons">people</i>
                 <div>
@@ -91,7 +164,7 @@ if ($f === 'todos') {
             </div>
         </a>
 
-        <a class="stat-card-link" href="index.php?f=ativos">
+        <a class="stat-card-link" href="index.php?f=ativos&q=<?= urlencode($search) ?>&page=<?= (int)$page ?>&per=<?= (int)$per ?><?= $force_ddi ? '&ddi='.$force_ddi : '' ?>">
             <div class="stat-card ativo">
                 <i class="material-icons">check_circle</i>
                 <div>
@@ -101,7 +174,7 @@ if ($f === 'todos') {
             </div>
         </a>
 
-        <a class="stat-card-link" href="index.php?f=avencer">
+        <a class="stat-card-link" href="index.php?f=avencer&q=<?= urlencode($search) ?>&page=<?= (int)$page ?>&per=<?= (int)$per ?><?= $force_ddi ? '&ddi='.$force_ddi : '' ?>">
             <div class="stat-card avencer">
                 <i class="material-icons">schedule</i>
                 <div>
@@ -111,7 +184,7 @@ if ($f === 'todos') {
             </div>
         </a>
 
-        <a class="stat-card-link" href="index.php?f=vencidos">
+        <a class="stat-card-link" href="index.php?f=vencidos&q=<?= urlencode($search) ?>&page=<?= (int)$page ?>&per=<?= (int)$per ?><?= $force_ddi ? '&ddi='.$force_ddi : '' ?>">
             <div class="stat-card vencido">
                 <i class="material-icons">error</i>
                 <div>
@@ -153,7 +226,14 @@ if ($f === 'todos') {
                     <td><?= date('d/m/Y', strtotime(vencimento($c['data_inicio'], $c['plano']))) ?></td>
                     <td><span class="status <?= $info['classe'] ?>"><?= $info['status'] ?></span></td>
                     <td class="wa-cell">
-                        <a href="pagar.php?id=<?= $c['id'] ?>" class="btn-icon">
+                        <?php
+                            // Se quiser manter a página pagar.php, deixe como está:
+                            // $waHref = 'pagar.php?id='.$c['id'];
+                            // Se quiser link direto pro WhatsApp, troque para:
+                            // $waHref = 'https://wa.me/'.wa_phone($c['telefone'], $force_ddi).'?text='.urlencode('Olá '.$c['nome'].', tudo bem?');
+                            $waHref = 'pagar.php?id='.$c['id'];
+                        ?>
+                        <a href="<?= htmlspecialchars($waHref) ?>" class="btn-icon">
                             <i class="fa-brands fa-square-whatsapp"></i>
                         </a>
                     </td>
@@ -167,15 +247,68 @@ if ($f === 'todos') {
             </tbody>
         </table>
     </div>
+
+    <!-- Paginação -->
+    <div class="pagination" style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+        <?php
+        $baseParams = 'per='.$per.'&q='.urlencode($search).'&f='.$f.($force_ddi ? '&ddi='.$force_ddi : '');
+        ?>
+        <?php if ($page > 1): ?>
+            <a class="btn-page" href="index.php?page=<?= $page-1 ?>&<?= $baseParams ?>">&laquo; Anterior</a>
+        <?php else: ?>
+            <span class="btn-page disabled">&laquo; Anterior</span>
+        <?php endif; ?>
+
+        <span class="page-indicator">Página <?= (int)$page ?> de <?= (int)$total_pages ?></span>
+
+        <?php if ($page < $total_pages): ?>
+            <a class="btn-page" href="index.php?page=<?= $page+1 ?>&<?= $baseParams ?>">Próxima &raquo;</a>
+        <?php else: ?>
+            <span class="btn-page disabled">Próxima &raquo;</span>
+        <?php endif; ?>
+    </div>
 </div>
 
 <script>
 if (Notification.permission === 'default') Notification.requestPermission();
-const es = new EventSource('notifications.php');
-es.onmessage = e => {
-    const nomes = JSON.parse(e.data);
-    nomes.forEach(n => new Notification('Lembrete', { body: `${n} vence em 3 dias!`, icon: 'icons/icon-192.png' }));
-};
+
+// SSE + fallback para polling (InfinityFree pode matar SSE)
+let esOk = true;
+try {
+    const es = new EventSource('notifications.php');
+    es.onerror = () => { esOk = false; es.close(); };
+    es.onmessage = e => {
+        try {
+            const nomes = JSON.parse(e.data);
+            (nomes || []).forEach(n =>
+                new Notification('Lembrete', {
+                    body: `${n} vence em 3 dias!`,
+                    icon: 'icons/icon-192.png'
+                })
+            );
+        } catch (_) {}
+    };
+    setTimeout(() => { if (!esOk) startPolling(); }, 5000);
+} catch(e) {
+    esOk = false;
+    startPolling();
+}
+
+function startPolling(){
+    setInterval(async () => {
+        try {
+            const r = await fetch('notifications.php?poll=1', { cache:'no-store' });
+            if (!r.ok) return;
+            const nomes = await r.json();
+            (nomes || []).forEach(n =>
+                new Notification('Lembrete', {
+                    body: `${n} vence em 3 dias!`,
+                    icon: 'icons/icon-192.png'
+                })
+            );
+        } catch(e){}
+    }, 60000); // 1 min
+}
 
 function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
