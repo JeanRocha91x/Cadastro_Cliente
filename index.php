@@ -2,12 +2,14 @@
 require_once 'config.php';
 require_once 'functions.php';
 
-// --- Cabeçalhos de segurança básicos (se o host reclamar, pode remover a linha do CSP) ---
+// --- Cabeçalhos de segurança básicos ---
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
-// Se a InfinityFree implicar com CSP, comente a linha abaixo.
-header("Content-Security-Policy: default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; script-src 'self' https://cdnjs.cloudflare.com");
+
+// ATENÇÃO: o CSP abaixo bloqueia JS inline (inclui onclick do hambúrguer).
+// Para InfinityFree + este layout, é melhor deixar comentado.
+// header("Content-Security-Policy: default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; script-src 'self' https://cdnjs.cloudflare.com");
 
 requireLogin();
 
@@ -310,8 +312,13 @@ function startPolling(){
     }, 60000); // 1 min
 }
 
+// ABRIR / FECHAR MENU LATERAL (MOBILE)
 function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('open');
+    const sidebar  = document.querySelector('.sidebar');
+    const burger   = document.querySelector('.hamburger');
+
+    if (sidebar) sidebar.classList.toggle('open');
+    if (burger)  burger.classList.toggle('open');
 }
 </script>
 </body>
